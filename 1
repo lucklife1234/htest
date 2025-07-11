@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎲 หวย AI </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            flex: 1;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .data-list {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .lottery-number {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 20px;
+        }
+
+        .mini-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <button class="mini-toggle" onclick="toggleMode()" title="สลับโหมด">🔄</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🎲 หวย AI Mini</h1>
+            <p>ระบบวิเคราะห์สถิติหวย</p>
+        </div>
+
+        <div class="section">
+            <h3>📝 เพิ่มข้อมูล</h3>
+            <div class="form-group">
+                <select id="lotteryType" onchange="changeLotteryType()">
+                    <option value="thai">หวยไทย (3ตัว)</option>
+                    <option value="malay">หวยมาเลย์ (4ตัว)</option>
+                    <option value="stock">หวยหุ้น (2ตัว)</option>
+                </select>
+                <input type="text" id="lotteryNumber" placeholder="หมายเลข" maxlength="3">
+                <input type="date" id="drawDate">
+                <button class="btn" onclick="addData()">เพิ่ม</button>
+            </div>
+            
+            <div style="text-align: center; margin: 15px 0;">
+                <button class="btn" onclick="addSample()">📄 ข้อมูลตัวอย่าง</button>
+                <button class="btn" onclick="clearData()" style="background: #e74c3c;">🗑️ ล้างข้อมูล</button>
+            </div>
+
+            <div class="data-list" id="dataList">
+                <div class="no-data">ยังไม่มีข้อมูล</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 สถิติการวิเคราะห์</h3>
+            <div id="analysisSection" style="display: none;">
+                <div class="analysis-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="analysis-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">🎯 หลักหน่วย</h4>
+                        <div id="unitsAnalysis">---</div>
+                    </div>
+                    <div class="analysis-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">🎯 หลักสิบ</h4>
+                        <div id="tensAnalysis">---</div>
+                    </div>
+                    <div class="analysis-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #f39c12;" id="hundredsCard" style="display: none;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">🎯 หลักร้อย</h4>
+                        <div id="hundredsAnalysis">---</div>
+                    </div>
+                    <div class="analysis-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #9b59b6;" id="thousandsCard" style="display: none;">
+                        <h4 style="color: #2c3e50; margin-bottom: 10px;">🎯 หลักพัน</h4>
+                        <div id="thousandsAnalysis">---</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลเก็บในหน่วยความจำ
+        let lotteryData = {};
+        let currentType = 'thai';
+        let digitCount = 3;
+
+        // โหลดข้อมูลจาก localStorage
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('lotteryMiniData');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    lotteryData = parsed.data || {};
+                }
+            } catch (e) {
+                console.log('ไม่สามารถโหลดข้อมูลได้');
+            }
+            
+            // ตรวจสอบโครงสร้างข้อมูล
+            ['thai', 'malay', 'stock'].forEach(type => {
+                if (!lotteryData[type]) lotteryData[type] = [];
+            });
+        }
+
+        // บันทึกข้อมูล
+        function saveData() {
+            try {
+                localStorage.setItem('lotteryMiniData', JSON.stringify({
+                    data: lotteryData
+                }));
+            } catch (e) {
+                console.log('ไม่สามารถบันทึกข้อมูลได้');
+            }
+        }
+
+        // เปลี่ยนประเภทหวย
+        function changeLotteryType() {
+            const select = document.getElementById('lotteryType');
+            currentType = select.value;
+            
+            const numberInput = document.getElementById('lotteryNumber');
+            
+            switch(currentType) {
+                case 'thai':
+                    digitCount = 3;
+                    numberInput.maxLength = 3;
+                    numberInput.placeholder = 'เช่น 123';
+                    break;
+                case 'malay':
+                    digitCount = 4;
+                    numberInput.maxLength = 4;
+                    numberInput.placeholder = 'เช่น 1234';
+                    break;
+                case 'stock':
+                    digitCount = 2;
+                    numberInput.maxLength = 2;
+                    numberInput.placeholder = 'เช่น 12';
+                    break;
+            }
+            
+            updateDisplay();
+        }
+
+        // เพิ่มข้อมูล
+        function addData() {
+            const number = document.getElementById('lotteryNumber').value.trim();
+            const date = document.getElementById('drawDate').value;
+            
+            if (!number || !date) {
+                alert('กรุณากรอกข้อมูลให้ครบ');
+                return;
+            }
+            
+            if (number.length !== digitCount || !/^\d+$/.test(number)) {
+                alert(`กรุณากรอกตัวเลข ${digitCount} หลัก`);
+                return;
+            }
+            
+            // เพิ่มข้อมูล
+            lotteryData[currentType].unshift({
+                number: number,
+                date: new Date(date).toLocaleDateString('th-TH'),
+                timestamp: new Date(date).getTime()
+            });
+            
+            // เรียงตามวันที่
+            lotteryData[currentType].sort((a, b) => b.timestamp - a.timestamp);
+            
+            // ล้างฟอร์ม
+            document.getElementById('lotteryNumber').value = '';
+            document.getElementById('drawDate').value = '';
+            
+            saveData();
+            updateDisplay();
+        }
+
+        // เพิ่มข้อมูลตัวอย่าง
+        function addSample() {
+            const samples = {
+                thai: ['123', '456', '789', '234', '567', '890', '345', '678'],
+                malay: ['1234', '5678', '9012', '3456', '7890', '2345', '6789', '0123'],
+                stock: ['12', '34', '56', '78', '90', '23', '45', '67']
+            };
+            
+            const data = samples[currentType];
+            lotteryData[currentType] = [];
+            
+            data.forEach((number, index) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (data.length - index) * 3);
+                
+                lotteryData[currentType].push({
+                    number: number,
+                    date: date.toLocaleDateString('th-TH'),
+                    timestamp: date.getTime()
+                });
+            });
+            
+            saveData();
+            updateDisplay();
+            alert(`เพิ่มข้อมูลตัวอย่าง ${data.length} งวดแล้ว`);
+        }
+
+        // ล้างข้อมูล
+        function clearData() {
+            if (confirm('ต้องการล้างข้อมูลทั้งหมด?')) {
+                lotteryData[currentType] = [];
+                saveData();
+                updateDisplay();
+            }
+        }
+
+        // วิเคราะห์แต่ละหลัก
+        function analyzePositions(data) {
+            const positions = Array(digitCount).fill(null).map(() => Array(10).fill(0));
+            const positionNames = ['หน่วย', 'สิบ', 'ร้อย', 'พัน'];
+            
+            // นับความถี่แต่ละหลัก
+            data.forEach(item => {
+                for (let pos = 0; pos < digitCount; pos++) {
+                    if (item.number[digitCount - 1 - pos]) { // เริ่มจากหลักหน่วย
+                        positions[pos][parseInt(item.number[digitCount - 1 - pos])]++;
+                    }
+                }
+            });
+            
+            return positions.map((freq, posIndex) => {
+                const total = data.length;
+                const sorted = freq.map((count, digit) => ({
+                    digit,
+                    count,
+                    percentage: total > 0 ? ((count / total) * 100).toFixed(1) : 0
+                })).filter(item => item.count > 0)
+                  .sort((a, b) => b.count - a.count);
+                
+                return {
+                    position: positionNames[posIndex],
+                    stats: sorted.slice(0, 3), // เอา 3 อันดับแรก
+                    total: total
+                };
+            });
+        }
+
+        // วิเคราะห์ตัวเลขฮอตและเย็น
+        function analyzeHotCold(data) {
+            const frequency = Array(10).fill(0);
+            
+            data.forEach(item => {
+                for (let i = 0; i < item.number.length; i++) {
+                    frequency[parseInt(item.number[i])]++;
+                }
+            });
+            
+            const total = data.length * digitCount;
+            const analyzed = frequency.map((count, digit) => ({
+                digit,
+                count,
+                percentage: total > 0 ? ((count / total) * 100).toFixed(1) : 0
+            }));
+            
+            const sorted = [...analyzed].sort((a, b) => b.count - a.count);
+            
+            return {
+                hot: sorted.slice(0, 3),
+                cold: sorted.slice(-3).reverse(),
+                all: analyzed
+            };
+        }
+
+        // อัปเดตการแสดงผลการวิเคราะห์
+        function updateAnalysis() {
+            const data = lotteryData[currentType] || [];
+            const analysisSection = document.getElementById('analysisSection');
+            
+            if (data.length === 0) {
+                if (analysisSection) analysisSection.style.display = 'none';
+                return;
+            }
+            
+            if (analysisSection) analysisSection.style.display = 'block';
+            
+            // แสดง/ซ่อนการ์ดตามจำนวนหลัก
+            const hundredsCard = document.getElementById('hundredsCard');
+            const thousandsCard = document.getElementById('thousandsCard');
+            
+            if (hundredsCard) hundredsCard.style.display = digitCount >= 3 ? 'block' : 'none';
+            if (thousandsCard) thousandsCard.style.display = digitCount >= 4 ? 'block' : 'none';
+            
+            // วิเคราะห์แต่ละหลัก
+            const positions = analyzePositions(data);
+            const elementIds = ['unitsAnalysis', 'tensAnalysis', 'hundredsAnalysis', 'thousandsAnalysis'];
+            
+            positions.forEach((pos, index) => {
+                const element = document.getElementById(elementIds[index]);
+                if (element && pos.stats.length > 0) {
+                    element.innerHTML = pos.stats.map((stat, i) => `
+                        <div style="margin-bottom: 5px; font-size: 0.9em;">
+                            <strong style="color: ${i === 0 ? '#e74c3c' : i === 1 ? '#f39c12' : '#3498db'};">
+                                ${i + 1}. เลข ${stat.digit}
+                            </strong>
+                            <br>
+                            <span style="color: #666;">
+                                ${stat.count}/${pos.total} ครั้ง (${stat.percentage}%)
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            });
+            
+            // วิเคราะห์ตัวเลขฮอต/เย็น
+            const hotCold = analyzeHotCold(data);
+            
+            // แสดงตัวเลขฮอต (แสดงทุกตัว 0-9)
+            const hotContainer = document.getElementById('hotNumbers');
+            if (hotContainer) {
+                hotContainer.innerHTML = hotCold.all.map(item => `
+                    <div style="
+                        padding: 8px; 
+                        background: ${item.count === 0 ? '#ecf0f1' : item.percentage >= 15 ? '#e74c3c' : item.percentage >= 10 ? '#f39c12' : '#3498db'}; 
+                        color: white; 
+                        border-radius: 4px; 
+                        font-weight: bold;
+                        ${item.count === 0 ? 'color: #7f8c8d;' : ''}
+                    ">
+                        <div>${item.digit}</div>
+                        <div style="font-size: 0.8em;">${item.count}</div>
+                        <div style="font-size: 0.7em;">${item.percentage}%</div>
+                    </div>
+                `).join('');
+            }
+           
+            
+            // อัปเดตสรุปภาพรวม
+            const totalDataEl = document.getElementById('totalData');
+            const hottestNumberEl = document.getElementById('hottestNumber');
+            const coldestNumberEl = document.getElementById('coldestNumber');
+            
+            if (totalDataEl) totalDataEl.textContent = data.length;
+            if (hottestNumberEl) hottestNumberEl.textContent = hotCold.hot[0] ? hotCold.hot[0].digit : '-';
+            if (coldestNumberEl) coldestNumberEl.textContent = hotCold.cold[0] ? hotCold.cold[0].digit : '-';
+        }
+
+        // อัปเดตการแสดงผล
+        function updateDisplay() {
+            const data = lotteryData[currentType] || [];
+            const listEl = document.getElementById('dataList');
+            
+            if (listEl) {
+                if (data.length === 0) {
+                    listEl.innerHTML = '<div class="no-data">ยังไม่มีข้อมูล</div>';
+                } else {
+                    listEl.innerHTML = data.slice(0, 10).map((item, index) => `
+                        <div class="data-item">
+                            <div>
+                                <span class="lottery-number">${item.number}</span>
+                                <span style="margin-left: 10px; color: #666;">${item.date}</span>
+                            </div>
+                            <button onclick="deleteItem(${index})" style="background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">ลบ</button>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            updateAnalysis();
+        }
+
+        // ลบรายการ
+        function deleteItem(index) {
+            lotteryData[currentType].splice(index, 1);
+            saveData();
+            updateDisplay();
+        }
+
+        // สลับโหมด (ฟีเจอร์ซ่อน)
+        function toggleMode() {
+            const container = document.querySelector('.container');
+            if (container) {
+                if (container.style.maxWidth === '400px') {
+                    container.style.maxWidth = '800px';
+                    container.style.transform = 'scale(1)';
+                } else {
+                    container.style.maxWidth = '400px';
+                    container.style.transform = 'scale(0.9)';
+                }
+            }
+        }
+
+        // เริ่มต้นระบบ
+        function init() {
+            loadData();
+            const dateInput = document.getElementById('drawDate');
+            if (dateInput) {
+                dateInput.valueAsDate = new Date();
+            }
+            changeLotteryType();
+            updateDisplay();
+        }
+
+        // บันทึกก่อนปิดหน้า
+        window.addEventListener('beforeunload', saveData);
+        
+        // เริ่มต้น
+        window.onload = init;
+    </script>
+</body>
+</html>
